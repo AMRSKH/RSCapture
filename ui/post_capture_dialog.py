@@ -18,7 +18,7 @@ class PostCaptureDialog(QDialog):
     """
     def __init__(self, temp_video_path: str, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("RSCapture - រក្សាទុកវីដេអូ (Save Video)")
+        self.setWindowTitle("RSCapture - ការរក្សាទុកវីដេអូ")
         self.setGeometry(200, 200, 800, 600) # x, y, width, height
 
         self.temp_video_path = temp_video_path
@@ -35,7 +35,7 @@ class PostCaptureDialog(QDialog):
         main_layout = QVBoxLayout()
 
         # Video Player Section
-        video_player_group = QGroupBox("មើលវីដេអូ (Video Preview)")
+        video_player_group = QGroupBox("មើលវីដេអូដែលបានថតរួច")
         video_layout = QVBoxLayout()
 
         self.media_player = QMediaPlayer(self)
@@ -67,7 +67,7 @@ class PostCaptureDialog(QDialog):
         main_layout.addWidget(video_player_group)
 
         # Quality Selection Section
-        quality_group = QGroupBox("ជ្រើសរើសគុណភាពវីដេអូ (Select Video Quality)")
+        quality_group = QGroupBox("ជ្រើសរើសគុណភាពវីដេអូដែលចង់រក្សាទុក")
         quality_layout = QHBoxLayout()
 
         self.radio_low = QRadioButton("ទាប (Low)")
@@ -88,8 +88,8 @@ class PostCaptureDialog(QDialog):
 
         # Action Buttons Section
         button_layout = QHBoxLayout()
-        self.save_button = QPushButton("រក្សាទុក (Save)")
-        self.discard_button = QPushButton("បោះបង់ (Discard)")
+        self.save_button = QPushButton("រក្សាទុក")
+        self.discard_button = QPushButton("បោះបង់")
 
         self.save_button.clicked.connect(self._save_video)
         self.discard_button.clicked.connect(self._discard_video)
@@ -110,7 +110,7 @@ class PostCaptureDialog(QDialog):
             self.media_player.setSource(QUrl.fromLocalFile(self.temp_video_path))
             self.media_player.play()
         else:
-            CustomMessageBox.error(self, "Error", "ឯកសារវីដេអូបណ្ដោះអាសន្នមិនមានទេ។ (Temporary video file not found.)")
+            CustomMessageBox.error(self, "Error", "ឯកសារវីដេអូបណ្ដោះអាសន្នមិនមានទេ")
             self.reject() # Close dialog if file is missing
 
     def _toggle_play_pause(self):
@@ -166,25 +166,25 @@ class PostCaptureDialog(QDialog):
 
         file_name, _ = QFileDialog.getSaveFileName(
             self,
-            "រក្សាទុកវីដេអូ (Save Video)",
+            "រក្សាទុកវីដេអូ",
             os.path.expanduser("~/Videos/RSCapture_video.mp4"), # Default path and name
             "MP4 ឯកសារ (*.mp4);;MOV ឯកសារ (*.mov);;All Files (*)"
         )
 
         if file_name:
-            CustomMessageBox.info(self, "កំពុងដំណើរការ (Processing)", "វីដេអូកំពុងត្រូវបានរក្សាទុក... (Video is being saved...)")
+            CustomMessageBox.info(self, "កំពុងដំណើរការរក្សាទុក", "វីដេអូកំពុងត្រូវបានរក្សាទុក... សូមរង់ចាំ")
             success = self.video_processor.re_encode_video(
                 self.temp_video_path,
                 file_name,
                 self.selected_quality
             )
             if success:
-                CustomMessageBox.info(self, "បានរក្សាទុក (Saved)", f"វីដេអូត្រូវបានរក្សាទុកដោយជោគជ័យទៅ: {file_name}")
+                CustomMessageBox.info(self, "បានរក្សាទុក!", f"វីដេអូត្រូវបានរក្សាទុកដោយជោគជ័យទៅ: {file_name}")
                 self.accept() # Close dialog with accepted status
             else:
-                CustomMessageBox.error(self, "បរាជ័យ (Failed)", "ការរក្សាទុកវីដេអូបានបរាជ័យ។ (Failed to save video.)")
+                CustomMessageBox.error(self, "បរាជ័យ!", "ការរក្សាទុកវីដេអូបានបរាជ័យ")
         else:
-            CustomMessageBox.warning(self, "បោះបង់ (Cancelled)", "ការរក្សាទុកត្រូវបានបោះបង់។ (Save operation cancelled.)")
+            CustomMessageBox.warning(self, "បោះបង់!", "ការរក្សាទុកត្រូវបានបោះបង់")
 
     def _discard_video(self):
         """
@@ -194,8 +194,8 @@ class PostCaptureDialog(QDialog):
         if self.media_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.stop()
 
-        if CustomMessageBox.question(self, "បញ្ជាក់ (Confirm)", "តើអ្នកពិតជាចង់បោះបង់វីដេអូនេះមែនទេ? (Are you sure you want to discard this video?)"):
-            CustomMessageBox.info(self, "បានបោះបង់ (Discarded)", "វីដេអូត្រូវបានបោះបង់។ (Video has been discarded.)")
+        if CustomMessageBox.question(self, "បញ្ជាក់!", "តើអ្នកពិតជាចង់បោះបង់វីដេអូនេះមែនទេ?"):
+            CustomMessageBox.info(self, "បានបោះបង់!", "វីដេអូត្រូវបានបោះបង់")
             self.reject() # Close dialog with rejected status
 
     def reject(self):

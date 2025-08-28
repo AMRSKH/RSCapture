@@ -6,6 +6,7 @@ from PyQt6.QtGui import QIcon
 
 import os
 import tempfile
+import shutil # <--- ត្រូវតែ Import shutil នៅទីនេះ!
 
 from ui.selection_overlay import SelectionOverlay
 from ui.post_capture_dialog import PostCaptureDialog
@@ -19,7 +20,7 @@ class MainWindow(QMainWindow):
     """
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("RSCapture - កម្មវិធីថតអេក្រង់ (Screen Recorder)")
+        self.setWindowTitle("RSCapture Screen Recording Software")
         self.setGeometry(100, 100, 400, 250) # x, y, width, height
         self.setWindowIcon(QIcon.fromTheme("video-display")) # Simple icon
 
@@ -46,7 +47,7 @@ class MainWindow(QMainWindow):
 
         # --- Header Section ---
         header_layout = QHBoxLayout()
-        self.app_title_label = QLabel("<h1>RSCapture</h1>")
+        self.app_title_label = QLabel("<h1>កម្មវិធីថតអេក្រង់ អ អេស ខេបឈ័រ</h1>")
         self.app_title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         header_layout.addWidget(self.app_title_label)
         main_layout.addLayout(header_layout)
@@ -58,7 +59,7 @@ class MainWindow(QMainWindow):
         status_layout = QVBoxLayout()
         status_frame.setLayout(status_layout)
 
-        self.status_label = QLabel("ស្ថានភាព: រួចរាល់ (Status: Ready)")
+        self.status_label = QLabel("ស្ថានភាព: រួចរាល់!")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         status_layout.addWidget(self.status_label)
 
@@ -73,18 +74,18 @@ class MainWindow(QMainWindow):
         # --- Control Buttons Section ---
         button_layout = QHBoxLayout()
 
-        self.btn_select_area = QPushButton("ជ្រើសរើសតំបន់ (Select Area)")
+        self.btn_select_area = QPushButton("ជ្រើសរើសតំបន់ដែលចង់ថត")
         self.btn_select_area.setIcon(QIcon.fromTheme("selection-rectangle"))
         self.btn_select_area.clicked.connect(self._start_selection)
         button_layout.addWidget(self.btn_select_area)
 
-        self.btn_record = QPushButton("ថត (Record)")
+        self.btn_record = QPushButton("ចាប់ផ្ដើមថត")
         self.btn_record.setIcon(QIcon.fromTheme("media-record"))
         self.btn_record.clicked.connect(self._start_record)
         self.btn_record.setEnabled(False) # Disable initially, enable after area selection
         button_layout.addWidget(self.btn_record)
 
-        self.btn_stop = QPushButton("បញ្ឈប់ (Stop)")
+        self.btn_stop = QPushButton("បញ្ចប់ការថត")
         self.btn_stop.setIcon(QIcon.fromTheme("media-playback-stop"))
         self.btn_stop.clicked.connect(self._stop_record)
         self.btn_stop.setEnabled(False) # Disable initially
@@ -111,20 +112,20 @@ class MainWindow(QMainWindow):
             self.btn_select_area.setEnabled(False)
             self.btn_record.setEnabled(False)
             self.btn_stop.setEnabled(True)
-            self.status_label.setText("ស្ថានភាព: កំពុងថត... (Status: Recording...)")
+            self.status_label.setText("ស្ថានភាព: កំពុងថត... ")
         else:
             self.btn_select_area.setEnabled(True)
             # Enable record only if an area has been selected
             self.btn_record.setEnabled(self.selected_rect is not None)
             self.btn_stop.setEnabled(False)
-            self.status_label.setText("ស្ថានភាព: រួចរាល់ (Status: Ready)")
+            self.status_label.setText("ស្ថានភាព: រួចរាល់!")
 
     def _start_selection(self):
         """
         Activates the selection overlay for the user to choose a screen area.
         """
         if self.is_recording:
-            CustomMessageBox.warning(self, "Warning", "មិនអាចជ្រើសរើសតំបន់បានទេ ពេលកំពុងថត។ (Cannot select area while recording.)")
+            CustomMessageBox.warning(self, "សារដាស់តឿន!", "មិនអាចជ្រើសរើសតំបន់បានទេ ពេលកំពុងថត")
             return
 
         self.hide() # Hide main window while selection overlay is active
@@ -141,7 +142,7 @@ class MainWindow(QMainWindow):
         self.selected_rect = (x, y, width, height)
         print(f"តំបន់ដែលបានជ្រើសរើស: ({x}, {y}) {width}x{height}")
         self.show() # Show main window again
-        CustomMessageBox.info(self, "បានជ្រើសរើស (Selected)", f"តំបន់ថតត្រូវបានជ្រើសរើស: {width}x{height}")
+        CustomMessageBox.info(self, "បានជ្រើសរើស ", f"តំបន់ថតត្រូវបានជ្រើសរើស: {width}x{height}")
         self._update_ui_state()
 
     def _start_record(self):
@@ -149,10 +150,10 @@ class MainWindow(QMainWindow):
         Initiates the screen recording process using FFmpeg.
         """
         if self.is_recording:
-            CustomMessageBox.warning(self, "Warning", "ការថតកំពុងដំណើរការរួចហើយ។ (Recording is already active.)")
+            CustomMessageBox.warning(self, "សារដាស់តឿន!", "ការថតកំពុងដំណើរការរួចហើយ")
             return
         if not self.selected_rect:
-            CustomMessageBox.warning(self, "Warning", "សូមជ្រើសរើសតំបន់ថតជាមុនសិន។ (Please select a capture area first.)")
+            CustomMessageBox.warning(self, "សារដាស់តឿន!", "សូមជ្រើសរើសតំបន់ថតជាមុនសិន")
             return
 
         x, y, width, height = self.selected_rect
@@ -163,7 +164,7 @@ class MainWindow(QMainWindow):
         # Check if FFmpeg is available before trying to start capture
         if not self.capture_manager._check_ffmpeg():
             CustomMessageBox.error(self, "FFmpeg មិនមាន (FFmpeg Not Found)",
-                                   "FFmpeg មិនត្រូវបានដំឡើងទេ។ សូមដំឡើងវាដើម្បីប្រើ RSCapture។ (FFmpeg is not installed. Please install it to use RSCapture.)"
+                                   "FFmpeg មិនត្រូវបានដំឡើងទេ។ សូមដំឡើងវាដើម្បីប្រើ RSCapture"
                                    "\nឧទាហរណ៍: sudo apt install ffmpeg")
             return
 
@@ -172,9 +173,9 @@ class MainWindow(QMainWindow):
             self.is_recording = True
             self.elapsed_time_ms = 0
             self.record_timer.start(1000) # Update every second
-            CustomMessageBox.info(self, "កំពុងថត (Recording)", "ការថតបានចាប់ផ្តើម។ (Recording has started.)")
+            CustomMessageBox.info(self, "កំពុងថត!", "ការថតបានចាប់ផ្តើម")
         else:
-            CustomMessageBox.error(self, "បរាជ័យ (Failed)", "ការចាប់ផ្តើមថតបានបរាជ័យ។ (Failed to start recording.)")
+            CustomMessageBox.error(self, "បរាជ័យ!", "ការចាប់ផ្តើមថតបានបរាជ័យ")
 
         self._update_ui_state()
 
@@ -183,7 +184,7 @@ class MainWindow(QMainWindow):
         Stops the screen recording process and opens the post-capture dialog.
         """
         if not self.is_recording:
-            CustomMessageBox.warning(self, "Warning", "មិនមានការថតសកម្មដើម្បីបញ្ឈប់ទេ។ (No active recording to stop.)")
+            CustomMessageBox.warning(self, "សារដាស់តឿន!", "មិនមានសកម្មភាពការថតដើម្បីបញ្ឈប់ទេ")
             return
 
         self.record_timer.stop()
@@ -199,7 +200,7 @@ class MainWindow(QMainWindow):
             dialog = PostCaptureDialog(temp_file, self)
             dialog.exec() # Open dialog modally
         else:
-            CustomMessageBox.error(self, "បរាជ័យ (Failed)", "ការបញ្ឈប់ការថតបានបរាជ័យ ឬរកមិនឃើញឯកសារបណ្តោះអាសន្ន។ (Failed to stop recording or temporary file not found.)")
+            CustomMessageBox.error(self, "បរាជ័យ! ", "ការបញ្ឈប់ការថតបានបរាជ័យ ឬរកមិនឃើញឯកសារបណ្តោះអាសន្នទេ")
             # Attempt to clean up even if temp_file is None or path doesn't exist.
             # The PostCaptureDialog's reject/accept handles file deletion.
             # If the file wasn't created, there's nothing to delete.
@@ -222,7 +223,7 @@ class MainWindow(QMainWindow):
         and temporary directory is cleaned up on application exit.
         """
         if self.capture_manager.is_capturing():
-            if CustomMessageBox.question(self, "បញ្ជាក់ (Confirm)", "ការថតកំពុងដំណើរការ។ តើអ្នកពិតជាចង់បិទកម្មវិធីមែនទេ? (Recording is active. Are you sure you want to exit?)"):
+            if CustomMessageBox.question(self, "បញ្ជាក់!", "ការថតកំពុងដំណើរការ។ តើអ្នកពិតជាចង់បិទកម្មវិធីមែនទេ?"):
                 self.capture_manager.stop_capture() # Stop FFmpeg
                 self._cleanup_temp_dir()
                 event.accept()
